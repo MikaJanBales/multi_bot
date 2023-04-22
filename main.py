@@ -3,15 +3,10 @@ import random
 import requests
 from aiogram import executor, types
 from aiogram.dispatcher import FSMContext
-from currency_converter import CurrencyConverter
-
 from multi_bot.data.config import API_WEATHER, API_UNSPLASH, API_CONVERT
 from multi_bot.loader import dp
 from multi_bot.states.converter import Wallets
 from multi_bot.states.weather import City
-
-
-# currency = CurrencyConverter()
 
 
 @dp.message_handler(commands=["start"])
@@ -38,10 +33,6 @@ async def callback(call):
         await call.message.answer("Введите сумму конвертации")
         await Wallets.sum_wallet.set()
 
-
-# async def convert(amount, from_wallet, to_wallet):
-#     res = currency.convert(amount, from_wallet, to_wallet)
-#     return res
 
 async def convert(amount, from_wallet, to_wallet):
     url = f'https://v6.exchangerate-api.com/v6/{API_CONVERT}/latest/{from_wallet}'
@@ -102,9 +93,6 @@ async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
 @dp.message_handler(state=City.city)
 async def get_weather_handler(message: types.Message, state: FSMContext):
     answer = message.text
-    # await state.update_data(city=answer)
-    # cities = await state.get_data()
-    # city = cities.get("city")
     city = answer
     city = city.strip().lower()
     res = requests.get(f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_WEATHER}&units=metric")
