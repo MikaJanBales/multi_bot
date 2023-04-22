@@ -4,8 +4,9 @@ import requests
 from aiogram import executor, types
 from aiogram.dispatcher import FSMContext
 from multi_bot.data.config import API_WEATHER, API_UNSPLASH, API_CONVERT
-from multi_bot.loader import dp
+from multi_bot.loader import dp, bot
 from multi_bot.states.converter import Wallets
+from multi_bot.states.poll import Poll
 from multi_bot.states.weather import City
 
 
@@ -16,7 +17,7 @@ async def start(message: types.Message):
     markup.add(types.InlineKeyboardButton("Узнать прогноз погоды", callback_data="get_weather"))
     markup.add(types.InlineKeyboardButton("Конвертировать валюты", callback_data="get_convert"))
     markup.add(types.InlineKeyboardButton("Фото милых животных", callback_data="get_photo_animal"))
-    markup.add(types.InlineKeyboardButton("Создать опрос", callback_data="regdf"))
+    markup.add(types.InlineKeyboardButton("Создать опрос", callback_data="create_poll"))
     await message.reply(mess, reply_markup=markup)
 
 
@@ -32,6 +33,32 @@ async def callback(call):
     elif call.data == "get_convert":
         await call.message.answer("Введите сумму конвертации")
         await Wallets.sum_wallet.set()
+    elif call.data == "create_poll":
+        await call.message.answer("Введите вопрос для опроса")
+        await Poll.question.set()
+
+
+@dp.message_handler(state=Poll.question)
+async def get_question_for_poll(message: types.Message, state: FSMContext):
+    answer = message.text
+    print(answer)
+    answer += '?' if answer[-1] != '?' else answer
+    await state.update_data(question=answer)
+    await message.answer("Напиши варианты ответа через ';'(точку с запятой)")
+    await Poll.answers.set()
+
+
+@dp.message_handler(state=Poll.answers)
+async def get_answers_for_poll(message: types.Message, state: FSMContext):
+    answer = message.text.split(";")
+    print(answer)
+    await state.update_data(answers=answer)
+    data = await state.get_data()
+    question = data.get("question")
+    answers = data.get("answers")
+    print(question, answers)
+    await bot.send_poll(chat_id=message.chat.id, question=question, options=answers)
+    await state.finish()
 
 
 async def convert(amount, from_wallet, to_wallet):
