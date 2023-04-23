@@ -62,12 +62,20 @@ async def get_answers_for_poll(message: types.Message, state: FSMContext):
 
 
 async def convert(amount, from_wallet, to_wallet):
+    # URL для доступа к API Exchange Rate
     url = f'https://v6.exchangerate-api.com/v6/{API_CONVERT}/latest/{from_wallet}'
+
+    # Отправляем GET-запрос
     response = requests.get(url)
-    data = response.json()
-    course = data["conversion_rates"][to_wallet]
-    res = round(amount * course, 2)
-    return res
+
+    # Обрабатываем ответ сервера
+    if response.status_code == 200:
+        data = response.json()
+        course = data["conversion_rates"][to_wallet]
+        res = round(amount * course, 2)
+        return res
+    else:
+        raise
 
 
 @dp.message_handler(state=Wallets.sum_wallet)
