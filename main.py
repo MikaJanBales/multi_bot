@@ -10,6 +10,7 @@ from multi_bot.states.poll import Poll
 from multi_bot.states.weather import City
 
 
+# обработчик команды "/start"
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
     mess = f"Привет, {message.from_user.first_name}! Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
@@ -21,6 +22,7 @@ async def start(message: types.Message):
     await message.reply(mess, reply_markup=markup)
 
 
+# обработчик inline-кнопок callback
 @dp.callback_query_handler()
 async def callback(call):
     if call.data == "get_weather":
@@ -38,6 +40,7 @@ async def callback(call):
         await Poll.question.set()
 
 
+# хендлер для обработки вопроса от пользователя
 @dp.message_handler(state=Poll.question)
 async def get_question_for_poll(message: types.Message, state: FSMContext):
     answer = message.text
@@ -48,6 +51,7 @@ async def get_question_for_poll(message: types.Message, state: FSMContext):
     await Poll.answers.set()
 
 
+# хендлер для обработки вариантов ответа от пользователя и создание опроса
 @dp.message_handler(state=Poll.answers)
 async def get_answers_for_poll(message: types.Message, state: FSMContext):
     answer = message.text.split(";")
@@ -61,6 +65,7 @@ async def get_answers_for_poll(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+# функция для конвертации валют
 async def convert(amount, from_wallet, to_wallet):
     # URL для доступа к API Exchange Rate
     url = f'https://v6.exchangerate-api.com/v6/{API_CONVERT}/latest/{from_wallet}'
@@ -78,6 +83,7 @@ async def convert(amount, from_wallet, to_wallet):
         raise
 
 
+# хендлер для обработки конвиртируемой суммы
 @dp.message_handler(state=Wallets.sum_wallet)
 async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
     try:
@@ -101,6 +107,7 @@ async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
         await Wallets.sum_wallet.set()
 
 
+# хендлер для обработки конвиртируемых валют и выдача результата конвертации
 @dp.message_handler(state=Wallets.from_to_wallet)
 async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
     answer = message.text
@@ -125,6 +132,7 @@ async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
     # await state.finish()
 
 
+# хендлер для обраотки города и выдача прогноза погоды
 @dp.message_handler(state=City.city)
 async def get_weather_handler(message: types.Message, state: FSMContext):
     answer = message.text
@@ -140,6 +148,7 @@ async def get_weather_handler(message: types.Message, state: FSMContext):
     await state.finish()
 
 
+# хендлер для выдачи фото милого животного
 async def get_photo_animal(message):
     # Параметры запроса
     params = {
@@ -161,4 +170,5 @@ async def get_photo_animal(message):
     await message.answer_photo(photo_url)
 
 
+# запуск бота
 executor.start_polling(dp)
