@@ -13,6 +13,8 @@ from multi_bot.states.weather import City
 @dp.message_handler(commands=["start"])
 async def start(message: types.Message):
     mess = f"Привет, {message.from_user.first_name}! Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
+
+    # создание кнопок меню
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Узнать прогноз погоды", callback_data="get_weather"))
     markup.add(types.InlineKeyboardButton("Конвертировать валюты", callback_data="get_convert"))

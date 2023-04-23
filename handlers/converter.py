@@ -28,14 +28,20 @@ async def convert(amount, from_wallet, to_wallet):
 # хендлер для обработки конвиртируемой суммы
 @dp.message_handler(state=Wallets.sum_wallet)
 async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
+    # обработка ошибки на неверный ввод(не число)
     try:
+        # сохранение ввода(сумму конвертации) пользователя
         answer = float(message.text.strip())
         await state.update_data(sum_wallet=answer)
     except ValueError:
         await message.reply("Неверный формат. Впишите сумму.")
         await Wallets.sum_wallet.set()
         return
+
+    # обработка ошибки на неверный ввод(число меньше или равно нуля)
     if float(message.text.strip()) > 0:
+
+        # создание кнопок меню
         markup = types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
         btn1 = types.KeyboardButton("RUB/USD")
         btn2 = types.KeyboardButton("RUB/EUR")
@@ -52,7 +58,10 @@ async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
 # хендлер для обработки конвиртируемых валют и выдача результата конвертации
 @dp.message_handler(state=Wallets.from_to_wallet)
 async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
+    # сохранение ввода(пара конвертируемых валют) пользователя
     answer = message.text
+
+    # обработка кнопок
     if answer != "Другое значение.":
         answer = answer.upper().split("/")
         await state.update_data(from_to_wallet=answer)
@@ -60,11 +69,14 @@ async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
         amount = data.get("sum_wallet")
         from_wallet = data.get("from_to_wallet")[0]
         to_wallet = data.get("from_to_wallet")[1]
+
+        # обработка ошибки неправильного ввода пары валют или ввод несуществующих валют
         try:
             res = await convert(amount, from_wallet, to_wallet)
             await message.answer(
                 f"На данный момент {amount}{from_wallet} равно {res}{to_wallet}. Можете вписать сумму.")
             await Wallets.sum_wallet.set()
+        #
         except:
             await message.reply("Такая валюта не поддерживается.")
             await Wallets.sum_wallet.set()
