@@ -1,10 +1,9 @@
-import json
-import random
-import requests
 from aiogram import executor, types
-from aiogram.dispatcher import FSMContext
-from multi_bot.data.config import API_WEATHER, API_UNSPLASH, API_CONVERT
-from multi_bot.loader import dp, bot
+from multi_bot.handlers.photo import get_photo_animal
+from multi_bot.handlers.weather import get_weather_handler
+from multi_bot.handlers.poll import get_question_for_poll
+from multi_bot.handlers.converter import get_convert_sum_wallet
+from multi_bot.loader import dp
 from multi_bot.states.converter import Wallets
 from multi_bot.states.poll import Poll
 from multi_bot.states.weather import City
@@ -35,139 +34,10 @@ async def callback(call):
     elif call.data == "get_convert":
         await call.message.answer("Введите сумму конвертации")
         await Wallets.sum_wallet.set()
+
     elif call.data == "create_poll":
         await call.message.answer("Введите вопрос для опроса")
         await Poll.question.set()
-
-
-# хендлер для обработки вопроса от пользователя
-@dp.message_handler(state=Poll.question)
-async def get_question_for_poll(message: types.Message, state: FSMContext):
-    answer = message.text
-    print(answer)
-    answer += '?' if answer[-1] != '?' else answer
-    await state.update_data(question=answer)
-    await message.answer("Напиши варианты ответа через ';'(точку с запятой)")
-    await Poll.answers.set()
-
-
-# хендлер для обработки вариантов ответа от пользователя и создание опроса
-@dp.message_handler(state=Poll.answers)
-async def get_answers_for_poll(message: types.Message, state: FSMContext):
-    answer = message.text.split(";")
-    print(answer)
-    await state.update_data(answers=answer)
-    data = await state.get_data()
-    question = data.get("question")
-    answers = data.get("answers")
-    print(question, answers)
-    await bot.send_poll(chat_id=message.chat.id, question=question, options=answers)
-    await state.finish()
-
-
-# функция для конвертации валют
-async def convert(amount, from_wallet, to_wallet):
-    # URL для доступа к API Exchange Rate
-    url = f'https://v6.exchangerate-api.com/v6/{API_CONVERT}/latest/{from_wallet}'
-
-    # Отправляем GET-запрос
-    response = requests.get(url)
-
-    # Обрабатываем ответ сервера
-    if response.status_code == 200:
-        data = response.json()
-        course = data["conversion_rates"][to_wallet]
-        res = round(amount * course, 2)
-        return res
-    else:
-        raise
-
-
-# хендлер для обработки конвиртируемой суммы
-@dp.message_handler(state=Wallets.sum_wallet)
-async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
-    try:
-        answer = float(message.text.strip())
-        await state.update_data(sum_wallet=answer)
-    except ValueError:
-        await message.reply("Неверный формат. Впишите сумму.")
-        await Wallets.sum_wallet.set()
-        return
-    if float(message.text.strip()) > 0:
-        markup = types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
-        btn1 = types.KeyboardButton("RUB/USD")
-        btn2 = types.KeyboardButton("RUB/EUR")
-        btn3 = types.InlineKeyboardButton("USD/EUR")
-        btn4 = types.InlineKeyboardButton("Другое значение.")
-        markup.add(btn1, btn2, btn3, btn4)
-        await message.reply("Выберите пару валют", reply_markup=markup)
-        await Wallets.from_to_wallet.set()
-    else:
-        await message.reply("Сумма должна быть больше 0. Впишите сумму.")
-        await Wallets.sum_wallet.set()
-
-
-# хендлер для обработки конвиртируемых валют и выдача результата конвертации
-@dp.message_handler(state=Wallets.from_to_wallet)
-async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
-    answer = message.text
-    if answer != "Другое значение.":
-        answer = answer.upper().split("/")
-        await state.update_data(from_to_wallet=answer)
-        data = await state.get_data()
-        amount = data.get("sum_wallet")
-        from_wallet = data.get("from_to_wallet")[0]
-        to_wallet = data.get("from_to_wallet")[1]
-        try:
-            res = await convert(amount, from_wallet, to_wallet)
-            await message.answer(
-                f"На данный момент {amount}{from_wallet} равно {res}{to_wallet}. Можете вписать сумму.")
-            await Wallets.sum_wallet.set()
-        except:
-            await message.reply("Такая валюта не поддерживается.")
-            await Wallets.sum_wallet.set()
-    else:
-        await message.answer("Напишите пару валют в виде <1 валюта>/<2 валюта>")
-        await Wallets.from_to_wallet.set()
-    # await state.finish()
-
-
-# хендлер для обраотки города и выдача прогноза погоды
-@dp.message_handler(state=City.city)
-async def get_weather_handler(message: types.Message, state: FSMContext):
-    answer = message.text
-    city = answer
-    city = city.strip().lower()
-    res = requests.get(f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_WEATHER}&units=metric")
-    if res.status_code == 200:
-        data = json.loads(res.text)
-        await message.answer(f"Сейчас погода в городе {data['name']}: {data['main']['temp']}°C")
-    else:
-        await message.answer("Город указан не верно")
-
-    await state.finish()
-
-
-# хендлер для выдачи фото милого животного
-async def get_photo_animal(message):
-    # Параметры запроса
-    params = {
-        "query": "cute animals",
-        "orientation": "landscape",
-        "count": 25,
-        "client_id": API_UNSPLASH
-    }
-
-    # URL для запроса
-    url = "https://api.unsplash.com/photos/random"
-
-    # Отправляем запрос и получаем ответ
-    response = requests.get(url, params=params)
-    # Извлекаем URL случайной фотографии с милым животным из ответа
-    data = response.json()
-    random_photo = random.choice(data)
-    photo_url = random_photo["urls"]["regular"]
-    await message.answer_photo(photo_url)
 
 
 # запуск бота
