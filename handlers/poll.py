@@ -9,7 +9,9 @@ from multi_bot.states.poll import Poll
 @dp.message_handler(state=Poll.question)
 async def get_question_for_poll(message: types.Message, state: FSMContext):
     answer = message.text
-    answer += '?' if answer[-1] != '?' else answer
+    # answer += '?' if answer[-1] != '?' else answer
+    if answer[-1] != '?':
+        answer += '?'
     await state.update_data(question=answer)
     await message.answer("Напиши варианты ответа через ';'(точку с запятой)")
     await Poll.answers.set()
