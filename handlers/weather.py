@@ -5,7 +5,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from multi_bot.data.config import API_WEATHER
-from multi_bot.handlers.start import buttons
+from multi_bot.keyboards.menu_button import button_for_menu
 from multi_bot.loader import dp
 from multi_bot.states.weather import City
 
@@ -34,5 +34,5 @@ async def get_weather_handler(message: types.Message, state: FSMContext):
     await state.finish()
 
     mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
-    markup = buttons()
+    markup = button_for_menu()
     await message.reply(mess, reply_markup=markup)

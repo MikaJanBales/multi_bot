@@ -3,7 +3,7 @@ import random
 import requests
 
 from multi_bot.data.config import API_UNSPLASH
-from multi_bot.handlers.start import buttons
+from multi_bot.keyboards.menu_button import button_for_menu
 
 
 # функция для выдачи фото милого животного
@@ -30,7 +30,7 @@ async def get_photo_animal(message):
         await message.answer_photo(photo_url)
 
         mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
-        markup = buttons()
+        markup = button_for_menu()
         await message.reply(mess, reply_markup=markup)
     else:
         mess = "Попробуйте еще раз и сообщите, пожалуйста, администратору"

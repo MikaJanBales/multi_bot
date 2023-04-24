@@ -3,7 +3,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from multi_bot.data.config import API_CONVERT
-from multi_bot.handlers.start import buttons
+from multi_bot.keyboards.menu_button import button_for_menu
 from multi_bot.loader import dp
 from multi_bot.states.converter import Wallets
 
@@ -82,7 +82,7 @@ async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
             await state.finish()
 
             mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
-            markup = buttons()
+            markup = button_for_menu()
             await message.reply(mess, reply_markup=markup)
         except:
             mess = "Такая валюта не поддерживается."
