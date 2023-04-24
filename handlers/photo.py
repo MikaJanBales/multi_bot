@@ -33,4 +33,5 @@ async def get_photo_animal(message):
         markup = buttons()
         await message.reply(mess, reply_markup=markup)
     else:
-        await message.answer("Попробуйте еще раз и сообщите, пожалуйста, администратору")
+        mess = "Попробуйте еще раз и сообщите, пожалуйста, администратору"
+        await message.answer(mess)

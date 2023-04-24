@@ -35,7 +35,8 @@ async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
         answer = float(message.text.strip())
         await state.update_data(sum_wallet=answer)
     except ValueError:
-        await message.reply("Неверный формат. Впишите сумму.")
+        mess = "Неверный формат. Впишите сумму."
+        await message.reply(mess)
         await Wallets.sum_wallet.set()
         return
 
@@ -49,10 +50,12 @@ async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
         btn3 = types.InlineKeyboardButton("USD/EUR")
         btn4 = types.InlineKeyboardButton("Другое значение.")
         markup.add(btn1, btn2, btn3, btn4)
-        await message.reply("Выберите пару валют", reply_markup=markup)
+        mess = "Выберите пару валют"
+        await message.reply(mess, reply_markup=markup)
         await Wallets.from_to_wallet.set()
     else:
-        await message.reply("Сумма должна быть больше 0. Впишите сумму.")
+        mess = "Сумма должна быть больше 0. Впишите сумму."
+        await message.reply(mess)
         await Wallets.sum_wallet.set()
 
 
@@ -82,8 +85,10 @@ async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
             markup = buttons()
             await message.reply(mess, reply_markup=markup)
         except:
-            await message.reply("Такая валюта не поддерживается.")
+            mess = "Такая валюта не поддерживается."
+            await message.reply(mess)
             await Wallets.sum_wallet.set()
     else:
-        await message.answer("Напишите пару валют в виде <1 валюта>/<2 валюта>")
+        mess = "Напишите пару валют в виде <1 валюта>/<2 валюта>"
+        await message.answer(mess)
         await Wallets.from_to_wallet.set()

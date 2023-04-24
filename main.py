@@ -28,18 +28,21 @@ async def text_handler(message: types.Message):
 @dp.callback_query_handler()
 async def callback(call):
     if call.data == "get_weather":
-        await call.message.answer("Введите название города")
+        mess = "Введите название города"
+        await call.message.answer(mess)
         await City.city.set()
 
     elif call.data == "get_photo_animal":
         await get_photo_animal(call.message)
 
     elif call.data == "get_convert":
-        await call.message.answer("Введите сумму конвертации")
+        mess = "Введите сумму конвертации"
+        await call.message.answer(mess)
         await Wallets.sum_wallet.set()
 
     elif call.data == "create_poll":
-        await call.message.answer("Введите вопрос для опроса")
+        mess = "Введите вопрос для опроса"
+        await call.message.answer(mess)
         await Poll.question.set()
 
 

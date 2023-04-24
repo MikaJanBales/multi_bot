@@ -28,7 +28,8 @@ async def get_weather_handler(message: types.Message, state: FSMContext):
         data = json.loads(res.text)
         await message.answer(f"Сейчас погода в городе {data['name']}: {data['main']['temp']}°C")
     else:
-        await message.answer("Город указан не верно")
+        mess = "Город указан не верно"
+        await message.answer(mess)
 
     await state.finish()
 
