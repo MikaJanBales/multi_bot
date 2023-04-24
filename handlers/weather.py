@@ -5,11 +5,12 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from multi_bot.data.config import API_WEATHER
+from multi_bot.handlers.start import buttons
 from multi_bot.loader import dp
 from multi_bot.states.weather import City
 
 
-# хендлер для обработки названия города и выдачи прогноза погоды
+# обработчик названия города и выдачи прогноза погоды
 @dp.message_handler(state=City.city)
 async def get_weather_handler(message: types.Message, state: FSMContext):
     # сохранение ввода(название города) от пользователя
@@ -30,3 +31,7 @@ async def get_weather_handler(message: types.Message, state: FSMContext):
         await message.answer("Город указан не верно")
 
     await state.finish()
+
+    mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
+    markup = buttons()
+    await message.reply(mess, reply_markup=markup)

@@ -1,11 +1,12 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
+from multi_bot.handlers.start import buttons
 from multi_bot.loader import dp, bot
 from multi_bot.states.poll import Poll
 
 
-# хендлер для обработки вопроса от пользователя
+# обработчик вопроса от пользователя
 @dp.message_handler(state=Poll.question)
 async def get_question_for_poll(message: types.Message, state: FSMContext):
     answer = message.text
@@ -16,7 +17,7 @@ async def get_question_for_poll(message: types.Message, state: FSMContext):
     await Poll.answers.set()
 
 
-# хендлер для обработки вариантов ответа от пользователя и создание опроса
+# обработчик вариантов ответа от пользователя и создание опроса
 @dp.message_handler(state=Poll.answers)
 async def get_answers_for_poll(message: types.Message, state: FSMContext):
     answer = message.text.split(";")
@@ -26,3 +27,7 @@ async def get_answers_for_poll(message: types.Message, state: FSMContext):
     answers = data.get("answers")
     await bot.send_poll(chat_id=message.chat.id, question=question, options=answers)
     await state.finish()
+
+    mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
+    markup = buttons()
+    await message.reply(mess, reply_markup=markup)

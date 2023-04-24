@@ -3,6 +3,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from multi_bot.data.config import API_CONVERT
+from multi_bot.handlers.start import buttons
 from multi_bot.loader import dp
 from multi_bot.states.converter import Wallets
 
@@ -25,7 +26,7 @@ async def convert(amount, from_wallet, to_wallet):
         raise
 
 
-# хендлер для обработки конвиртируемой суммы
+# обработчик конвиртируемой суммы
 @dp.message_handler(state=Wallets.sum_wallet)
 async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
     # обработка ошибки на неверный ввод(не число)
@@ -55,7 +56,7 @@ async def get_convert_sum_wallet(message: types.Message, state: FSMContext):
         await Wallets.sum_wallet.set()
 
 
-# хендлер для обработки конвиртируемых валют и выдача результата конвертации
+# обработчик конвиртируемых валют и выдача результата конвертации
 @dp.message_handler(state=Wallets.from_to_wallet)
 async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
     # сохранение ввода(пара конвертируемых валют) пользователя
@@ -74,13 +75,15 @@ async def get_convert_from_to_wallet(message: types.Message, state: FSMContext):
         try:
             res = await convert(amount, from_wallet, to_wallet)
             await message.answer(
-                f"На данный момент {amount}{from_wallet} равно {res}{to_wallet}. Можете вписать сумму.")
-            await Wallets.sum_wallet.set()
-        #
+                f"На данный момент {amount}{from_wallet} равно {res}{to_wallet}.")
+            await state.finish()
+
+            mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
+            markup = buttons()
+            await message.reply(mess, reply_markup=markup)
         except:
             await message.reply("Такая валюта не поддерживается.")
             await Wallets.sum_wallet.set()
     else:
         await message.answer("Напишите пару валют в виде <1 валюта>/<2 валюта>")
         await Wallets.from_to_wallet.set()
-    # await state.finish()

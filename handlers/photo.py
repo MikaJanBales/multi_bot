@@ -3,6 +3,7 @@ import random
 import requests
 
 from multi_bot.data.config import API_UNSPLASH
+from multi_bot.handlers.start import buttons
 
 
 # функция для выдачи фото милого животного
@@ -27,5 +28,9 @@ async def get_photo_animal(message):
         random_photo = random.choice(data)
         photo_url = random_photo["urls"]["regular"]
         await message.answer_photo(photo_url)
+
+        mess = "Выбери, пожалуйста, функцию, чем хочешь воспользоваться."
+        markup = buttons()
+        await message.reply(mess, reply_markup=markup)
     else:
         await message.answer("Попробуйте еще раз и сообщите, пожалуйста, администратору")
